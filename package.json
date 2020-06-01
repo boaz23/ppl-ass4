@@ -1,7 +1,7 @@
 {
   "name": "ppl",
   "version": "1.0.0",
-  "description": "HW3 \"Principles of Programming Languages\" 2020 BGU",
+  "description": "HW4 \"Principles of Programming Languages\" 2020 BGU",
   "main": "index.js",
   "scripts": {
     "test": "mocha --require ts-node/register **/*.test.ts",

@@ -1,4 +1,4 @@
-function* braid<T1, TReturn1, T2, TReturn2>(g1: Iterator<T1, TReturn1>, g2: Iterator<T2, TReturn2>): Generator<T1 | T2, void> {
+export function* braid<T1, TReturn1, T2, TReturn2>(g1: Iterator<T1, TReturn1>, g2: Iterator<T2, TReturn2>): Generator<T1 | T2, void> {
     let tailGen: Iterator<T1, TReturn1> | Iterator<T2, TReturn2>;
     while (true) {
         let r1: IteratorResult<T1, TReturn1> = g1.next();
@@ -29,7 +29,7 @@ function* braid<T1, TReturn1, T2, TReturn2>(g1: Iterator<T1, TReturn1>, g2: Iter
     }
 }
 
-function* biased<T1, TReturn1, T2, TReturn2>(g1: Iterator<T1, TReturn1>, g2: Iterator<T2, TReturn2>): Generator<T1 | T2, void> {
+export function* biased<T1, TReturn1, T2, TReturn2>(g1: Iterator<T1, TReturn1>, g2: Iterator<T2, TReturn2>): Generator<T1 | T2, void> {
     let tailGen: Iterator<T1, TReturn1> | Iterator<T2, TReturn2>;
     while (true) {
         let r1: IteratorResult<T1, TReturn1>;

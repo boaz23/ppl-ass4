@@ -101,6 +101,11 @@ describe('L5 Unparse', () => {
         expect(roundTrip('(values 1 "hi there" (values #f 6 (cons 1 2)))'))
            .to.deep.eq(makeOk('(values 1 "hi there" (values #f 6 (cons 1 2)))'));
     });
+
+    it('test 5 - let-values typed var declarations', () => {
+        expect(roundTrip('(let-values ((((a : number) (b : number) (c : boolean)) (f 0))) (+ a b c))'))
+            .to.deep.eq(makeOk('(let-values ((((a : number) (b : number) (c : boolean)) (f 0))) (+ a b c))'));
+    });
 });
 
 describe('L5 parseTexp', () => {

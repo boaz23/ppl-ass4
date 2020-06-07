@@ -42,7 +42,7 @@ import { isArray, isString, isNumericString, isIdentifier } from "../shared/type
 //         |  ( letrec ( binding*) <cexp>+ )               / LetrecExp(bindings:Binding[], body: CExp)
 //         |  ( let-values ( <values-binding>* ) <cexp>+ ) / LetValuesExp(bindings: ValuesBinding[], body: CExp[])
 //         |  ( set! <var> <cexp>)                         / SetExp(var: varRef, val: CExp)
-// <binding>        ::= ( <var> <cexp> )                   / Binding(var:VarDecl, val:Cexp)
+// <binding>        ::= ( <var-decl> <cexp> )                   / Binding(var:VarDecl, val:Cexp)
 // <values-binding> ::= ( (<var-decl>*) <cexp> )           / ValuesBinding(vars: VarDecl[], tuple: CExp)
 // <prim-op>        ::= + | - | * | / | < | > | = | not |  eq? | string=?
 //                        | values | cons | car | cdr | list? | number?

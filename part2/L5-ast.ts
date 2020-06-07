@@ -306,8 +306,8 @@ const parseLetrecExp = (bindings: Sexp, body: Sexp[]): Result<LetrecExp> =>
 const parseValuesBinding = (binding: Sexp): Result<ValuesBinding> =>
     !isArray(binding) ? makeFailure("Values binding must be an array") :
     binding.length !== 2 ? makeFailure("Values binding must array of length 2") :
-    !isArray(first(binding)) ? makeFailure("First item in a let-values binding must be an array") :
-    bind(mapResult(parseVarDecl, map(b => b[0], binding)),
+    !isArray(binding[0]) ? makeFailure("First item in a let-values binding must be an array") :
+    bind(mapResult(parseVarDecl, binding[0]),
         (vars: VarDecl[]) => bind(parseL5CExp(binding[1]),
         (tuple: CExp) =>
             makeOk(makeValuesBinding(vars, tuple)))

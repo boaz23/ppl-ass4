@@ -389,6 +389,11 @@ export const unparse = (e: Parsed): Result<string> =>
                         (unparseVarDecl(e.var), unparse(e.val)) :
     bind(mapResult(unparse, e.exps), (exps: string[]) => makeOk(`(L5 ${exps})`));
 
+const joinUnparsedStrings = (unparsed: string[]): string =>
+    join(" ", unparsed);
+const joinUnparsed = (unparsedExps: Result<string[]>): Result<string> =>
+    bind(unparsedExps, (s: string[]) => makeOk(joinUnparsedStrings(s)));
+
 const unparseReturn = (te: TExp): Result<string> =>
     isTVar(te) ? makeOk("") :
     bind(unparseTExp(te), (te: string) => makeOk(` : ${te}`));
@@ -423,8 +428,19 @@ const unparseLetrecExp = (le: LetrecExp): Result<string> =>
     safe2((bdgs: string, body: string) => makeOk(`(letrec (${bdgs}) ${body})`))
         (unparseBindings(le.bindings), unparseLExps(le.body));
 
+const unparseValuesBinding = (binding: ValuesBinding): Result<string> =>
+    bind(mapResult(unparseVarDecl, binding.vars),
+        (unparsedVars: string[]) => bind(unparse(binding.tuple),
+        (unparsedTuple: string) => makeOk(`((${joinUnparsedStrings(unparsedVars)}) ${unparsedTuple})`))
+    );
+const unparseValuesBindings = (bindings: ValuesBinding[]): Result<string> =>
+    joinUnparsed(mapResult(unparseValuesBinding, bindings));
+
 const unparseLetValuesExp = (lve: LetValuesExp): Result<string> =>
-    makeFailure("Implement this");
+    bind(unparseValuesBindings(lve.bindings),
+        (unparsedBindings: string) => bind(unparseLExps(lve.body),
+        (unparsedBody: string) => makeOk(`(let-values (${unparsedBindings}) ${unparsedBody})`))
+    );
 
 const unparseSetExp = (se: SetExp): Result<string> =>
     bind(unparse(se.val), (val: string) => makeOk(`(set! ${se.var.var} ${val})`));

@@ -29,12 +29,12 @@ const makeTVarGen = (): () => TVar => {
 describe('L5 Parse', () => {
     let tVarGen = makeTVarGen();
 
-    it('test1 -simple', () => {
+    it('test simple - 1', () => {
         const define = "(values 1 “string”)";
         expect(p('(values 1 "string")')).to.deep.equal(makeOk((makeAppExp(makePrimOp("values") , [makeNumExp(1),makeStrExp("string")]))));
     });
 
-    it('test2 -simple', () => {
+    it('test simple - 2', () => {
         expect(p(`
 (let-values (((a b c) (f 0)))
     (+ a b c))
@@ -81,23 +81,28 @@ describe('L5 Parse', () => {
 describe('L5 Unparse', () => {
     const roundTrip = (x: string): Result<string> => bind(p(x), unparse);
 
-    it('test1 -unparse', () => {
+    it('test 1 - simple', () => {
         const define = "(values 1 “string”)";
         expect(roundTrip(define)).to.deep.equal(makeOk(define));
     });
 
-    it('test2 -unparse', () => {
+    it('test 2 - simple', () => {
+        const define = "(let-values (((a b c) (f 0))) (+ a b c))";
+        expect(roundTrip(define)).to.deep.equal(makeOk(define));
+    });
+
+    it('test 3 - simple', () => {
         const define = "(define f (lambda (x) (values 1 2 3)))";
         expect(roundTrip(define)).to.deep.equal(makeOk(define));
         console.log(roundTrip(define));
     });
 
-    it('test2 -unparse', () => {
-        const define = "(let-values (((a b c) (f 0))) (+ a b c))";
-        expect(roundTrip(define)).to.deep.equal(makeOk(define));
+    it('test 4 - nested tuple', () => {
+        expect(roundTrip('(values 1 "hi there" (values #f 6 (cons 1 2)))'))
+           .to.deep.eq(makeOk('(values 1 "hi there" (values #f 6 (cons 1 2)))'));
     });
-
 });
+
 describe('L5 parseTexp', () => {
     it('test1 ', () => {
         const define = "(number * number * boolean)";
@@ -106,4 +111,3 @@ describe('L5 parseTexp', () => {
         console.log(parseTExp(define))
     });
 });
-

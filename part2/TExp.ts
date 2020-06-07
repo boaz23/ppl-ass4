@@ -49,6 +49,12 @@ export const isAtomicTExp = (x: any): x is AtomicTExp =>
 export type CompoundTExp = ProcTExp | TupleTExp;
 export const isCompoundTExp = (x: any): x is CompoundTExp => isProcTExp(x) || isTupleTExp(x);
 
+// defined even though it's not needed because tests of the assignment
+// might fail to compile
+export type NonTupleTExp = AtomicTExp | ProcTExp | TVar;
+export const isNonTupleTExp = (x: any): x is NonTupleTExp =>
+    isAtomicTExp(x) || isProcTExp(x) || isTVar(x);
+
 export type NumTExp = { tag: "NumTExp" };
 export const makeNumTExp = (): NumTExp => ({tag: "NumTExp"});
 export const isNumTExp = (x: any): x is NumTExp => x.tag === "NumTExp";

@@ -53,7 +53,7 @@ describe('L5 Type Checker', () => {
                    makeBoolTExp()
                ])
             ));
-            expect(parseTE('((Empty) * (number * number * string) * boolean * (Empty -> void) * ((number * boolean) -> void) -> boolean)')).to.deep.eq(makeOk(
+            expect(parseTE('((Empty) * (number * number * string) * boolean * (Empty -> void) * ((number * boolean) -> (string * boolean * number)) -> boolean)')).to.deep.eq(makeOk(
                 makeProcTExp([
                     makeEmptyTupleTExp(),
                     makeNonEmptyTupleTExp([
@@ -68,7 +68,11 @@ describe('L5 Type Checker', () => {
                             makeNumTExp(),
                             makeBoolTExp()
                         ])
-                    ], makeVoidTExp())
+                    ], makeNonEmptyTupleTExp([
+                        makeStrTExp(),
+                        makeBoolTExp(),
+                        makeNumTExp()
+                    ]))
                 ], makeBoolTExp())
             ))
         });
@@ -97,8 +101,8 @@ describe('L5 Type Checker', () => {
             expect(parseUnparse('(number * number)')).to.deep.eq(makeOk('(number * number)'));
             expect(parseUnparse('(number * boolean)')).to.deep.eq(makeOk('(number * boolean)'));
             expect(parseUnparse('(boolean)')).to.deep.eq(makeOk('(boolean)'));
-            expect(parseUnparse('((Empty) * (number * number * string) * boolean * (Empty -> void) * ((number * boolean) -> void) -> boolean)')).to.deep.eq(makeOk(
-                '((Empty) * (number * number * string) * boolean * (Empty -> void) * ((number * boolean) -> void) -> boolean)'
+            expect(parseUnparse('((Empty) * (number * number * string) * boolean * (Empty -> void) * ((number * boolean) -> (string * boolean * number)) -> boolean)')).to.deep.eq(makeOk(
+                '((Empty) * (number * number * string) * boolean * (Empty -> void) * ((number * boolean) -> (string * boolean * number)) -> boolean)'
             ))
         });
     });

@@ -1,4 +1,4 @@
-function f(x: number): Promise<number> {
+export function f(x: number): Promise<number> {
     return new Promise<number>((resolve, reject) => {
         try {
             resolve(1 / x);
@@ -9,7 +9,7 @@ function f(x: number): Promise<number> {
     });
 }
 
-function g(x: number): Promise<number> {
+export function g(x: number): Promise<number> {
     return new Promise<number>((resolve, reject) => {
         try {
             resolve(x * x);

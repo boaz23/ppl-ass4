@@ -1,4 +1,4 @@
-import { biased } from "./generators";
+import { biased } from "./part3";
 
 function* gen1() {
     yield 3;

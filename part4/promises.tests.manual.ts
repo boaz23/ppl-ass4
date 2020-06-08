@@ -1,4 +1,4 @@
-import { h, slower } from './promises'
+import { h, slower } from './part4'
 
 function print_h(x: number): void {
 h(x)

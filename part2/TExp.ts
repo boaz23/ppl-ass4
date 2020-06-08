@@ -5,20 +5,21 @@
 ;; Syntax with optional type annotations for var declarations and function return types.
 
 ;; Type language
-;; <texp>         ::= <atomic-te> | <compound-te> | <tvar>
-;; <atomic-te>    ::= <num-te> | <bool-te> | <str-te> | <void-te>
-;; <num-te>       ::= number   // num-te()
-;; <bool-te>      ::= boolean  // bool-te()
-;; <str-te>       ::= string   // str-te()
-;; <void-te>      ::= void     // void-te()
-;; <compound-te>  ::= <proc-te> | <tuple-te>
-;; <proc-te>      ::= [ <proc-args-te> -> <texp> ] // proc-te(param-tes: list(te), return-te: te)
-;; <proc-args-te> ::= <empty-te> | <multiple-te>
-;; <tuple-te>     ::= <non-empty-tuple-te> | <empty-te>
-;; <non-empty-tuple-te> ::= (<multiple-te>)
-;; <multiple-te> ::= ( <texp> *)* <texp>
-;; <empty-te>     ::= Empty
-;; <tvar>         ::= a symbol starting with T // tvar(id: Symbol, contents; Box(string|boolean))
+;; <texp>               ::= <atomic-te> | <compound-te> | <tvar>
+;; <atomic-te>          ::= <num-te> | <bool-te> | <str-te> | <void-te>
+;; <num-te>             ::= number   // num-te()
+;; <bool-te>            ::= boolean  // bool-te()
+;; <str-te>             ::= string   // str-te()
+;; <void-te>            ::= void     // void-te()
+;; <compound-te>        ::= <proc-te> | <tuple-te>
+;; <proc-te>            ::= [ <proc-args-te> -> <texp> ] // proc-te(param-tes: list(te), return-te: te)
+;; <proc-args-te>       ::= <empty-te> | <multiple-te>
+;; <tuple-te>           ::= <non-empty-tuple-te> | <empty-tuple-te>
+;; <empty-tuple-te>     ::= (<empty-te>)    // EmptyTupleTExp()
+;; <non-empty-tuple-te> ::= (<multiple-te>) // NonEmptyTupleTExp(tes: TExp[])
+;; <multiple-te>        ::= ( <texp> *)* <texp>
+;; <empty-te>           ::= Empty
+;; <tvar>               ::= a symbol starting with T // tvar(id: Symbol, contents; Box(string|boolean))
 
 ;; Examples of type expressions
 ;; number

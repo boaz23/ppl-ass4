@@ -12,6 +12,16 @@ export type Functional = PrimOp | Closure;
 export const isFunctional = (x: any): x is Functional => isPrimOp(x) || isClosure(x);
 
 // ========================================================
+// Tuple
+export interface Tuple {
+    tag: "Tuple";
+    values: Value[];
+}
+export const makeTuple = (values: Value[]): Tuple =>
+    ({tag: "Tuple", values: values});
+export const isTuple = (x: any): x is Tuple => x.tag === "Tuple";
+
+// ========================================================
 // Closure for L5
 export interface Closure {
     tag: "Closure";
@@ -38,7 +48,7 @@ export interface SymbolSExp {
     val: string;
 }
 
-export type SExpValue = number | boolean | string | PrimOp | Closure | SymbolSExp | EmptySExp | CompoundSExp | void;
+export type SExpValue = number | boolean | string | PrimOp | Tuple | Closure | SymbolSExp | EmptySExp | CompoundSExp | void;
 export const isSExp = (x: any): x is SExpValue =>
     typeof(x) === 'string' || typeof(x) === 'boolean' || typeof(x) === 'number' ||
     isSymbolSExp(x) || isCompoundSExp(x) || isEmptySExp(x) || isPrimOp(x) || isClosure(x);
@@ -75,6 +85,7 @@ export const valueToString = (val: Value): string =>
     isString(val) ? `"${val}"` :
     isClosure(val) ? closureToString(val) :
     isPrimOp(val) ? val.op :
+    isTuple(val) ? `(${join(" * ", val.values)})` :
     isSymbolSExp(val) ? val.val :
     isEmptySExp(val) ? "'()" :
     isCompoundSExp(val) ? compoundSExpToString(val) :

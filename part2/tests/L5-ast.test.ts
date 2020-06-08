@@ -30,7 +30,6 @@ describe('L5 Parse', () => {
     let tVarGen = makeTVarGen();
 
     it('test simple - 1', () => {
-        const define = "(values 1 “string”)";
         expect(p('(values 1 "string")')).to.deep.equal(makeOk((makeAppExp(makePrimOp("values") , [makeNumExp(1),makeStrExp("string")]))));
     });
 

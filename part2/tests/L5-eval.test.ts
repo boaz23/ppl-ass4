@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {evalParse, evalProgram as evalProgramNode} from "../L5-eval";
-import {makeOk, bind} from "../../shared/result";
+import {makeOk, bind, makeFailure} from "../../shared/result";
 import {makeTuple} from "../L5-value";
 import {parseL5, Program} from "../L5-ast";
 
@@ -10,7 +10,7 @@ const evalProgram = (programString: string) =>
         (programNode: Program) => evalProgramNode(programNode)
     );
 
-describe('L5 eval tiples', () => {
+describe('L5 eval tuples', () => {
     it('evaluates values primitive op', () => {
         expect(evalParse('(values 1 "string")')).to.deep.eq(makeOk(
             makeTuple([
@@ -29,6 +29,47 @@ describe('L5 eval tiples', () => {
 (let-values (((a b c) (f 0)))
     (+ a b c))
 )
-       `))
+       `));
+
+        expect(evalParse('(let-values (((n s) (values 1 "string"))) n)')).to.deep.eq(makeOk(1));
+    });
+
+    it('evaluates values prim op with no rands', () => {
+        expect(evalProgram(`
+(L5
+(define f (lambda () (values)))
+(f)
+)`)).to.deep.eq(makeOk(makeTuple([])));
+    });
+
+    it('evaluates let-values with empty tuples', () => {
+        expect(evalProgram(`
+(L5
+(define f (lambda () (values)))
+(let-values
+    ((() (values))
+     (() (f))
+     ((a) (values 5))) a)
+)`)).to.deep.eq(makeOk(5));
+    });
+
+    it('tests evaluation of let-values fails when there\'s a mismatch between tuples length and binding variables count', () => {
+        expect(evalProgram(`
+(L5
+(define f (lambda () (values)))
+(let-values
+    (((a) (f))
+     (() (values))
+     ((a) (values 5))) a)
+)`)).to.deep.eq(makeFailure("number of declared variables in let-value binding is different than the number of values in the evaluated tuple"));
+
+        expect(evalProgram(`
+(L5
+(define f (lambda () (values)))
+(let-values
+    ((() (f))
+     ((b c) (values #t "my string" 5 2))
+     ((a) (values 5))) a)
+)`)).to.deep.eq(makeFailure("number of declared variables in let-value binding is different than the number of values in the evaluated tuple"));
     });
 });

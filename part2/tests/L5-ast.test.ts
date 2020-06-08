@@ -75,6 +75,20 @@ describe('L5 Parse', () => {
            )
         ));
     });
+
+    it('parses let-values with empty tuples', () => {
+       expect(p(`
+(let-values ((() (values 5))
+     (() (values))) 5)
+       `)).to.deep.eq(makeOk(
+           makeLetValuesExp([
+               makeValuesBinding([], makeAppExp(makePrimOp('values'), [makeNumExp(5)])),
+               makeValuesBinding([], makeAppExp(makePrimOp('values'), [])),
+           ], [
+               makeNumExp(5)
+           ])
+       ));
+    });
 });
 
 describe('L5 Unparse', () => {
@@ -104,6 +118,13 @@ describe('L5 Unparse', () => {
     it('test 5 - let-values typed var declarations', () => {
         expect(roundTrip('(let-values ((((a : number) (b : number) (c : boolean)) (f 0))) (+ a b c))'))
             .to.deep.eq(makeOk('(let-values ((((a : number) (b : number) (c : boolean)) (f 0))) (+ a b c))'));
+    });
+
+    it('unparses let-values with empty tuples', () => {
+        expect(roundTrip(`
+(let-values ((() (values 5))
+     (() (values))) 5)
+       `)).to.deep.eq(makeOk('(let-values ((() (values 5)) (() (values ))) 5)'));
     });
 });
 

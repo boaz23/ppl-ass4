@@ -46,7 +46,7 @@ import { isArray, isString, isNumericString, isIdentifier } from "../shared/type
 // <binding>        ::= ( <var-decl> <cexp> )              / Binding(var:VarDecl, val:Cexp)
 // <values-binding> ::= ( (<var-decl>*) <cexp> )           / ValuesBinding(vars: VarDecl[], tuple: CExp)
 // <prim-op>        ::= + | - | * | / | < | > | = | not |  eq? | string=?
-//                        | values | cons | car | cdr | list? | number?
+//                        | cons | car | cdr | list? | number?
 //                        | boolean? | symbol? | string?
 //                        | display | newline
 // <num-exp>        ::= a number token
@@ -70,15 +70,17 @@ export const isAtomicExp = (x: any): x is AtomicExp =>
     isNumExp(x) || isBoolExp(x) || isStrExp(x) ||
     isPrimOp(x) || isVarRef(x);
 
-export type CompoundExp = AppExp | IfExp | ProcExp | LetExp | LitExp | LetValuesExp | LetrecExp | ValuesExp | SetExp;
+export type CompoundExp = AppExp | IfExp | ProcExp | LetExp | LitExp | LetrecExp | LetValuesExp | ValuesExp | SetExp;
 export const isCompoundExp = (x: any): x is CompoundExp =>
     isAppExp(x) || isIfExp(x) || isProcExp(x) || isLitExp(x) ||
-    isLetExp(x) || isLetValuesExp(x) || isLetrecExp(x) || isValuesExp(x) || isSetExp(x);
+    isLetExp(x) || isLetrecExp(x) || isLetValuesExp(x) || isValuesExp(x) || isSetExp(x);
 export const expComponents = (e: Exp): CExp[] =>
     isIfExp(e) ? [e.test, e.then, e.alt] :
     isProcExp(e) ? e.body :
     isLetExp(e) ? [...e.body, ...map((b) => b.val, e.bindings)] :
     isLetrecExp(e) ? [...e.body, ...map((b) => b.val, e.bindings)] :
+    isLetValuesExp(e) ? [...e.body, ...map((b) => b.tuple, e.bindings)] :
+    isValuesExp(e) ? [...e.valueExps] :
     isAppExp(e) ? [e.rator, ...e.rands] :
     isSetExp(e) ? [e.val] :
     isDefineExp(e) ? [e.val] :
@@ -202,6 +204,10 @@ export const parseL5CompoundCExp = (op: Sexp, params: Sexp[]): Result<CExp> =>
     parseAppExp(op, params);
 
 export const parseL5SpecialForm = (op: Sexp, params: Sexp[]): Result<CExp> =>
+    // allows empty params
+    op === "values" ? parseValuesExp(params) :
+
+    // does not allow empty params
     isEmpty(params) ? makeFailure("Empty args for special form") :
     op === "if" ? parseIfExp(params) :
     op === "lambda" ? parseProcExp(first(params), rest(params)) :
@@ -239,16 +245,16 @@ export const parseL5CExp = (sexp: Sexp): Result<CExp> =>
 
 /*
     // <prim-op>  ::= + | - | * | / | < | > | = | not |  eq? | string=?
-    //                  | values | cons | car | cdr | list? | number?
+    //                  | cons | car | cdr | list? | number?
     //                  | boolean? | symbol? | string?
 */
 const isPrimitiveOp = (x: string): boolean =>
     ["+", "-", "*", "/", ">", "<", "=", "not", "eq?",
-     "string=?", "values", "cons", "car", "cdr", "pair?", "list?",
+     "string=?", "cons", "car", "cdr", "pair?", "list?",
      "number?", "boolean?", "symbol?", "string?", "display", "newline"].includes(x);
 
 const isSpecialForm = (x: string): boolean =>
-    ["if", "lambda", "let", "quote", "letrec", "let-values", "set!"].includes(x);
+    ["if", "lambda", "let", "quote", "letrec", "let-values", "values", "set!"].includes(x);
 
 const parseAppExp = (op: Sexp, params: Sexp[]): Result<AppExp> =>
     safe2((rator: CExp, rands: CExp[]) => makeOk(makeAppExp(rator, rands)))
@@ -330,6 +336,12 @@ const parseLetValuesExp = (bindings: Sexp, body: Sexp[]): Result<LetValuesExp> =
         (bindings: ValuesBinding[]) => bind(mapResult(parseL5CExp, body),
         (body: CExp[]) =>
             makeOk(makeLetValuesExp(bindings, body)))
+    );
+
+const parseValuesExp = (params: Sexp[]): Result<ValuesExp> =>
+    bind(
+        mapResult(parseL5CExp, params),
+        (valueExps: CExp[]) => makeOk(makeValuesExp(valueExps))
     );
 
 const parseSetExp = (params: Sexp[]): Result<SetExp> =>

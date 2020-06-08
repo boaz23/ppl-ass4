@@ -402,7 +402,7 @@ export const unparse = (e: Parsed): Result<string> =>
     isLetValuesExp(e) ? unparseLetValuesExp(e) :
     isProcExp(e) ? unparseProcExp(e) :
     isLitExp(e) ? makeOk(unparseLitExp(e)) :
-    isValuesExp(e) ? makeFailure("Not yet supported") :
+    isValuesExp(e) ? unparseValuesExp(e) :
     isSetExp(e) ? unparseSetExp(e) :
     // DefineExp | Program
     isDefineExp(e) ? safe2((vd: string, val: string) => makeOk(`(define ${vd} ${val})`))
@@ -460,6 +460,14 @@ const unparseLetValuesExp = (lve: LetValuesExp): Result<string> =>
     bind(unparseValuesBindings(lve.bindings),
         (unparsedBindings: string) => bind(unparseLExps(lve.body),
         (unparsedBody: string) => makeOk(`(let-values (${unparsedBindings}) ${unparsedBody})`))
+    );
+
+const unparseValuesExp = (ve: ValuesExp): Result<string> =>
+    bind(
+        mapResult(unparse, ve.valueExps),
+        (unparsedExps: string[]) => makeOk(`(values${
+            isEmpty(unparsedExps) ? "" : ` ${joinUnparsedStrings(unparsedExps)}`
+        })`)
     );
 
 const unparseSetExp = (se: SetExp): Result<string> =>

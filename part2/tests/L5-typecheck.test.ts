@@ -103,7 +103,13 @@ describe('L5 Type Checker', () => {
             expect(parseUnparse('(boolean)')).to.deep.eq(makeOk('(boolean)'));
             expect(parseUnparse('((Empty) * (number * number * string) * boolean * (Empty -> void) * ((number * boolean) -> (string * boolean * number)) -> boolean)')).to.deep.eq(makeOk(
                 '((Empty) * (number * number * string) * boolean * (Empty -> void) * ((number * boolean) -> (string * boolean * number)) -> boolean)'
-            ))
+            ));
+        });
+
+        it('unparses nested tuple', () => {
+            expect(parseUnparse('((Empty) * (number * (Empty) * (number * boolean) * string) * boolean * (Empty -> void) * ((number * boolean) -> (string * boolean * number)) -> boolean)')).to.deep.eq(makeOk(
+                '((Empty) * (number * (Empty) * (number * boolean) * string) * boolean * (Empty -> void) * ((number * boolean) -> (string * boolean * number)) -> boolean)'
+            ));
         });
     });
 

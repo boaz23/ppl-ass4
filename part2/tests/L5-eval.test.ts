@@ -1,7 +1,7 @@
 import {expect} from "chai";
 import {evalParse, evalProgram as evalProgramNode} from "../L5-eval";
 import {makeOk, bind, makeFailure} from "../../shared/result";
-import {makeTuple} from "../L5-value";
+import {makeCompoundSExp, makeTuple} from "../L5-value";
 import {parseL5, Program} from "../L5-ast";
 
 const evalProgram = (programString: string) =>
@@ -71,5 +71,26 @@ describe('L5 eval tuples', () => {
      ((b c) (values #t "my string" 5 2))
      ((a) (values 5))) a)
 )`)).to.deep.eq(makeFailure("number of declared variables in let-value binding is different than the number of values in the evaluated tuple"));
+    });
+
+    it('evaluates nested tuples', () => {
+        expect(evalParse('(values 1 "hi there" (values #f 6 (cons 1 2)))')).to.deep.eq(makeOk(
+           makeTuple([
+               1, "hi there", makeTuple([
+                   false, 6, makeCompoundSExp(1, 2)
+               ])
+           ])
+        ));
+
+        expect(evalParse(`
+(let-values (
+        ((x y t) (values 1 #f (values)))
+        ((a b c) (values 1 "hi there" (values #f 6 (cons 1 2))))
+    )
+    (let-values (((q p w) c)
+                 (() t))
+         (cdr w)
+    )
+)`)).to.deep.eq(makeOk(2));
     });
 });

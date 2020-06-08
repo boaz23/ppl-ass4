@@ -92,36 +92,36 @@ describe('L5 Parse', () => {
 });
 
 describe('L5 Unparse', () => {
-    const roundTrip = (x: string): Result<string> => bind(p(x), unparse);
+    const parseUnparse = (x: string): Result<string> => bind(p(x), unparse);
 
     it('test 1 - simple', () => {
         const define = "(values 1 “string”)";
-        expect(roundTrip(define)).to.deep.equal(makeOk(define));
+        expect(parseUnparse(define)).to.deep.equal(makeOk(define));
     });
 
     it('test 2 - simple', () => {
         const define = "(let-values (((a b c) (f 0))) (+ a b c))";
-        expect(roundTrip(define)).to.deep.equal(makeOk(define));
+        expect(parseUnparse(define)).to.deep.equal(makeOk(define));
     });
 
     it('test 3 - simple', () => {
         const define = "(define f (lambda (x) (values 1 2 3)))";
-        expect(roundTrip(define)).to.deep.equal(makeOk(define));
-        console.log(roundTrip(define));
+        expect(parseUnparse(define)).to.deep.equal(makeOk(define));
+        console.log(parseUnparse(define));
     });
 
     it('test 4 - nested tuple', () => {
-        expect(roundTrip('(values 1 "hi there" (values #f 6 (cons 1 2)))'))
+        expect(parseUnparse('(values 1 "hi there" (values #f 6 (cons 1 2)))'))
            .to.deep.eq(makeOk('(values 1 "hi there" (values #f 6 (cons 1 2)))'));
     });
 
     it('test 5 - let-values typed var declarations', () => {
-        expect(roundTrip('(let-values ((((a : number) (b : number) (c : boolean)) (f 0))) (+ a b c))'))
+        expect(parseUnparse('(let-values ((((a : number) (b : number) (c : boolean)) (f 0))) (+ a b c))'))
             .to.deep.eq(makeOk('(let-values ((((a : number) (b : number) (c : boolean)) (f 0))) (+ a b c))'));
     });
 
     it('unparses let-values with empty tuples', () => {
-        expect(roundTrip(`
+        expect(parseUnparse(`
 (let-values ((() (values 5))
      (() (values))) 5)
        `)).to.deep.eq(makeOk('(let-values ((() (values 5)) (() (values ))) 5)'));

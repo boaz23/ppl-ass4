@@ -11,7 +11,7 @@ const evalProgram = (programString: string) =>
     );
 
 describe('L5 eval tuples', () => {
-    it('evaluates values primitive op', () => {
+    it('evaluates values special form', () => {
         expect(evalParse('(values 1 "string")')).to.deep.eq(makeOk(
             makeTuple([
                 1,
@@ -34,7 +34,7 @@ describe('L5 eval tuples', () => {
         expect(evalParse('(let-values (((n s) (values 1 "string"))) n)')).to.deep.eq(makeOk(1));
     });
 
-    it('evaluates values prim op with no rands', () => {
+    it('evaluates values special form with no rands', () => {
         expect(evalProgram(`
 (L5
 (define f (lambda () (values)))

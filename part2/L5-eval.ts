@@ -20,6 +20,7 @@ import {
     isProcExp,
     isSetExp,
     isStrExp,
+    isValuesExp,
     isVarRef,
     LetExp,
     LetrecExp,
@@ -29,6 +30,7 @@ import {
     Program,
     SetExp,
     ValuesBinding,
+    ValuesExp,
     VarDecl
 } from './L5-ast';
 import {
@@ -41,7 +43,7 @@ import {
     setFBinding,
     theGlobalEnv
 } from "./L5-env";
-import {Closure, isClosure, isTuple, makeClosure, Value} from "./L5-value";
+import {Closure, isClosure, isTuple, makeClosure, makeTuple, Value} from "./L5-value";
 import {first, isEmpty, rest} from '../shared/list';
 import {bind, makeFailure, makeOk, mapResult, Result, safe2} from "../shared/result";
 import {parse as p} from "../shared/parser";
@@ -62,6 +64,7 @@ export const applicativeEval = (exp: CExp, env: Env): Result<Value> =>
     isLetExp(exp) ? evalLet(exp, env) :
     isLetrecExp(exp) ? evalLetrec(exp, env) :
     isLetValuesExp(exp) ? evalLetValuesExp(exp, env) :
+    isValuesExp(exp) ? evalValuesExp(exp, env) :
     isSetExp(exp) ? evalSet(exp, env) :
     isAppExp(exp) ? safe2((proc: Value, args: Value[]) => applyProcedure(proc, args))
                         (applicativeEval(exp.rator, env), mapResult(rand => applicativeEval(rand, env), exp.rands)) :
@@ -185,6 +188,12 @@ const evalLetValuesExp = (exp: LetValuesExp, env: Env): Result<Value> => {
         }
     );
 }
+
+const evalValuesExp = (exp: ValuesExp, env: Env): Result<Value> =>
+    bind(
+        mapResult((valueExp: CExp) => applicativeEval(valueExp, env), exp.valueExps),
+        (values: Value[]) => makeOk(makeTuple(values))
+    );
 
 // L4-eval-box: Handling of mutation with set!
 const evalSet = (exp: SetExp, env: Env): Result<void> =>

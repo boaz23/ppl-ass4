@@ -21,12 +21,12 @@ function g(x: number): Promise<number> {
 }
 
 export function h(x: number): Promise<number> {
-    return new Promise<number>((resolve, reject) => {
-        return g(x)
-            .then((x: number) => f(x))
-            .then((x: number) => resolve(x))
-            .catch((e) => reject(e));
-    });
+    return g(x)
+        .then((x: number) => f(x))
+        .catch((e) => {
+            console.log(e);
+            return e;
+        });
 }
 
 export function slower(ps: [Promise<any>, Promise<any>]): Promise<[any, any]> {

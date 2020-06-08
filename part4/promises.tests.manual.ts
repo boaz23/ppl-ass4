@@ -1,16 +1,28 @@
 import { h, slower } from './promises'
 
-h(0)
-.then((x: number) => console.log(x))
-.catch((e) => console.error("Error: " + e));
+function print_h(x: number): void {
+h(x)
+.then((x: number) => console.log(x));
+// .catch((e) => console.error("Error: " + e));
+}
 
-const promise1 = new Promise(function(resolve, reject) {
-    setTimeout(resolve, 100, 'one');
-});
-const promise2 = new Promise(function(resolve, reject) {
-    setTimeout(resolve, 50, 'two');
-});
+describe('promises', () => {
+// h(0)
+// .then((x: number) => console.log(x))
+// .catch((e) => console.error("Error: " + e));
 
-slower([promise1, promise2]).then(function(value) {
-    console.log(value);
+print_h(0);
+print_h(2);
+print_h(5);
+
+    const promise1 = new Promise(function (resolve, reject) {
+        setTimeout(resolve, 100, 'one');
+    });
+    const promise2 = new Promise(function (resolve, reject) {
+        setTimeout(resolve, 50, 'two');
+    });
+
+    slower([promise1, promise2]).then(function (value) {
+        console.log(value);
+    });
 });

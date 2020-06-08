@@ -1,3 +1,5 @@
+import { biased } from "./generators";
+
 function* gen1() {
     yield 3;
     yield 6;

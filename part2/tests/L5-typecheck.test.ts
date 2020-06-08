@@ -1,20 +1,25 @@
-import { expect } from 'chai';
-import { parseL5Exp, Exp } from '../L5-ast';
-import { typeofExp, L5typeof } from '../L5-typecheck';
-import { makeEmptyTEnv, makeExtendTEnv } from '../TEnv';
+import {expect} from 'chai';
+import {Exp, parseL5Exp} from '../L5-ast';
+import {L5typeof, typeofExp} from '../L5-typecheck';
+import {makeEmptyTEnv, makeExtendTEnv} from '../TEnv';
 import {
     makeBoolTExp,
     makeEmptyTupleTExp,
     makeNonEmptyTupleTExp,
     makeNumTExp,
-    makeProcTExp, makeStrTExp,
+    makeProcTExp,
+    makeStrTExp,
     makeTVar,
     makeVoidTExp,
-    parseTE, TExp,
+    parseTE,
+    TExp,
     unparseTExp
 } from '../TExp';
-import {makeOk, bind, Result, makeFailure} from '../../shared/result';
-import { parse as p } from "../../shared/parser";
+import {bind, isFailure, makeOk, Result} from '../../shared/result';
+import {parse as p} from "../../shared/parser";
+
+const incompatibleTypesPredicate = (res: Result<string>) =>
+    isFailure(res) && res.message.startsWith("Incompatible types");
 
 describe('L5 Type Checker', () => {
     describe('parseTE', () => {
@@ -243,6 +248,79 @@ describe('L5 Type Checker', () => {
             expect(L5typeof(`(define (x : (T1 -> (T1 -> number)))
                                          (lambda ((x : T1)) : (T1 -> number)
                                            (lambda((y : T1)) : number 5)))`)).to.deep.equal(makeOk("void"));
+        });
+    });
+
+    describe('L5 tuples typeof', () => {
+        it('typeof values special form', () => {
+            expect(L5typeof('(values 1 "stringg")')).to.deep.eq(makeOk(
+                '(number * string)'
+            ));
+        });
+
+        it('typeof let-values special form', () => {
+            expect(L5typeof(`
+(let-values ((((a : number) (b : number)) (values 1 2)))
+    (+ a b))
+       `)).to.deep.eq(makeOk('number'));
+
+        expect(L5typeof(`
+(let-values ((((a : number) (b : boolean)) (values 1 2)))
+    (+ a b))
+       `)).to.satisfy(incompatibleTypesPredicate);
+
+            expect(L5typeof('(let-values ((((n : number) (s : string)) (values 1 "string"))) n)')).to.deep.eq(makeOk(
+                'number'
+            ));
+
+            expect(L5typeof('(let-values ((((n : string) (s : number)) (values 1 "string"))) n)')).to.satisfy(incompatibleTypesPredicate);
+        });
+
+        it('typeof values special form with no rands', () => {
+            expect(L5typeof('(values)')).to.deep.eq(makeOk('(Empty)'));
+        });
+
+        it('typeof let-values with empty tuples', () => {
+            expect(L5typeof(`
+(let-values
+    ((() (values))
+     (() (values))
+     (((a : number)) (values 5))) a)
+ `)).to.deep.eq(makeOk('number'));
+        });
+
+        it('typeof let-values fails when there\'s a mismatch between tuples length and binding variables count', () => {
+            expect(L5typeof(`
+(let-values
+    ((((b : number)) (values))
+     (() (values))
+     ((a) (values 5))) a)
+`)).to.satisfy(incompatibleTypesPredicate);
+
+            expect(L5typeof(`
+(let-values
+    ((() (values))
+     (((b : boolean) (c : string)) (values #t "my string" 5 2))
+     ((a) (values 5))) a)
+`)).to.satisfy(incompatibleTypesPredicate);
+        });
+
+        it('L5typeof nested tuples', () => {
+            expect(L5typeof('(values 1 "hi there" (values #f 6 (lambda ((x : boolean) (y : number)) : (boolean * boolean) (values x (= y 0)))))')).to.deep.eq(makeOk(
+                '(number * string * (boolean * number * (boolean * number -> (boolean * boolean))))'
+            ));
+
+            expect(L5typeof(`
+(let-values (
+        (((x : number) (y : boolean) (t : (Empty))) (values 1 #f (values)))
+        (((a : number) (b : string) (c : (boolean * number * (boolean * number -> (boolean * boolean)))))
+         (values 1 "hi there" (values #f 6 (lambda ((x : boolean) (y : number)) : (boolean * boolean) (values x (= y 0))))))
+    )
+    (let-values ((((q : boolean) (p : number) (w : (boolean * number -> (boolean * boolean)))) c)
+                 (() t))
+         w
+    )
+)`)).to.deep.eq(makeOk('(boolean * number -> (boolean * boolean))'));
         });
     });
 });

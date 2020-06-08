@@ -29,7 +29,7 @@ describe('L5 eval tuples', () => {
 (let-values (((a b c) (f 0)))
     (+ a b c))
 )
-       `));
+       `)).to.deep.eq(makeOk(6));
 
         expect(evalParse('(let-values (((n s) (values 1 "string"))) n)')).to.deep.eq(makeOk(1));
     });
@@ -58,7 +58,7 @@ describe('L5 eval tuples', () => {
 (L5
 (define f (lambda () (values)))
 (let-values
-    (((a) (f))
+    (((b) (f))
      (() (values))
      ((a) (values 5))) a)
 )`)).to.deep.eq(makeFailure("number of declared variables in let-value binding is different than the number of values in the evaluated tuple"));

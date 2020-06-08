@@ -131,12 +131,3 @@ describe('L5 Unparse', () => {
        `)).to.deep.eq(makeOk('(let-values ((() (values 5)) (() (values))) 5)'));
     });
 });
-
-describe('L5 parseTexp', () => {
-    it('test1 ', () => {
-        const define = "(number * number * boolean)";
-        console.log(parseTExp(define))
-        expect(parseTExp(define)).to.deep.equal("DDD");
-        console.log(parseTExp(define))
-    });
-});

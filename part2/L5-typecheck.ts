@@ -1,17 +1,65 @@
 // L5-typecheck
 // ========================================================
-import { equals, map, zipWith } from 'ramda';
-import { isAppExp, isBoolExp, isDefineExp, isIfExp, isLetrecExp, isLetExp, isNumExp,
-         isPrimOp, isProcExp, isProgram, isStrExp, isVarRef, parseL5Exp, unparse,
-         AppExp, BoolExp, DefineExp, Exp, IfExp, LetrecExp, LetExp, NumExp,
-         Parsed, PrimOp, ProcExp, Program, StrExp } from "./L5-ast";
-import { applyTEnv, makeEmptyTEnv, makeExtendTEnv, TEnv } from "./TEnv";
-import { isProcTExp, makeBoolTExp, makeNumTExp, makeProcTExp, makeStrTExp, makeVoidTExp,
-         parseTE, unparseTExp,
-         BoolTExp, NumTExp, StrTExp, TExp, VoidTExp } from "./TExp";
-import { isEmpty, allT, first, rest } from '../shared/list';
-import { Result, makeFailure, bind, makeOk, safe3, safe2, zipWithResult } from '../shared/result';
-import { parse as p } from "../shared/parser";
+import {equals, map, reduce, zipWith} from 'ramda';
+import {
+    AppExp,
+    BoolExp,
+    CExp,
+    DefineExp,
+    Exp,
+    IfExp,
+    isAppExp,
+    isBoolExp,
+    isDefineExp,
+    isIfExp,
+    isLetExp,
+    isLetrecExp,
+    isLetValuesExp,
+    isNumExp,
+    isPrimOp,
+    isProcExp,
+    isProgram,
+    isStrExp,
+    isValuesExp,
+    isVarRef,
+    LetExp,
+    LetrecExp,
+    LetValuesExp,
+    NumExp,
+    Parsed,
+    parseL5Exp,
+    PrimOp,
+    ProcExp,
+    Program,
+    StrExp,
+    unparse,
+    ValuesBinding,
+    ValuesExp,
+    VarDecl
+} from "./L5-ast";
+import {applyTEnv, makeEmptyTEnv, makeExtendTEnv, TEnv} from "./TEnv";
+import {
+    BoolTExp,
+    isEmptyTupleTExp,
+    isProcTExp,
+    makeBoolTExp,
+    makeEmptyTupleTExp,
+    makeNonEmptyTupleTExp,
+    makeNumTExp,
+    makeProcTExp,
+    makeStrTExp,
+    makeVoidTExp,
+    NumTExp,
+    parseTE,
+    StrTExp,
+    TExp,
+    TupleTExp,
+    unparseTExp,
+    VoidTExp
+} from "./TExp";
+import {allT, first, isEmpty, rest} from '../shared/list';
+import {bind, makeFailure, makeOk, mapResult, Result, safe2, safe3, zipWithResult} from '../shared/result';
+import {parse as p} from "../shared/parser";
 
 // Purpose: Check that type expressions are equivalent
 // as part of a fully-annotated type check process of exp.
@@ -46,6 +94,8 @@ export const typeofExp = (exp: Parsed, tenv: TEnv): Result<TExp> =>
     isAppExp(exp) ? typeofApp(exp, tenv) :
     isLetExp(exp) ? typeofLet(exp, tenv) :
     isLetrecExp(exp) ? typeofLetrec(exp, tenv) :
+    isLetValuesExp(exp) ? typeofLetValues(exp, tenv) :
+    isValuesExp(exp) ? typeofValues(exp, tenv) :
     isDefineExp(exp) ? typeofDefine(exp, tenv) :
     isProgram(exp) ? typeofProgram(exp, tenv) :
     // Skip isSetExp(exp) isLitExp(exp)
@@ -181,6 +231,64 @@ export const typeofLetrec = (exp: LetrecExp, tenv: TEnv): Result<TExp> => {
     const constraints = bind(types, (types: TExp[]) => zipWithResult((typeI, ti) => checkEqualType(typeI, ti, exp), types, tis));
     return bind(constraints, _ => typeofExps(exp.body, tenvBody));
 };
+
+type ValuesBindingTypeDescriptor = [string, TExp];
+
+const typeofValuesBinding = (binding: ValuesBinding, tenv: TEnv, exp: LetValuesExp): Result<ValuesBindingTypeDescriptor[]> => {
+    const varsTE: TupleTExp = isEmpty(binding.vars) ?
+        makeEmptyTupleTExp() :
+        makeNonEmptyTupleTExp(map(
+            (varDecl: VarDecl) => varDecl.texp,
+            binding.vars
+        ));
+    const constraints: Result<ValuesBindingTypeDescriptor[]> = bind(
+        typeofExp(binding.tuple, tenv),
+        (valTe: TExp) => bind(checkEqualType(varsTE, valTe, exp),
+        _ => makeOk(
+            isEmptyTupleTExp(varsTE) ? [] :
+            zipWith(
+                (varDecl: VarDecl, texp: TExp) => [varDecl.var, texp],
+                binding.vars,
+                varsTE.TEs
+            )
+        )));
+    return constraints;
+}
+
+export const typeofLetValues = (exp: LetValuesExp, tenv: TEnv): Result<TExp> => {
+    const envBindingsRes: Result<ValuesBindingTypeDescriptor[]> = reduce(
+        (accRes: Result<ValuesBindingTypeDescriptor[]>, binding: ValuesBinding) =>
+            bind(
+                accRes,
+                (acc: ValuesBindingTypeDescriptor[]) => bind(typeofValuesBinding(binding, tenv, exp),
+                (tupleBindings: ValuesBindingTypeDescriptor[]) => makeOk(acc.concat(tupleBindings)))
+            ),
+        makeOk([]),
+        exp.bindings
+    );
+
+    return bind(
+        envBindingsRes,
+        (envBindings: ValuesBindingTypeDescriptor[]) => {
+            const vars: string[] = map(
+                (binding: ValuesBindingTypeDescriptor) => binding[0],
+                envBindings
+            );
+            const varTEs: TExp[] = map(
+                (binding: ValuesBindingTypeDescriptor) => binding[1],
+                envBindings
+            );
+
+            return typeofExps(exp.body, makeExtendTEnv(vars, varTEs, tenv));
+        }
+    );
+}
+
+export const typeofValues = (exp: ValuesExp, tenv: TEnv): Result<TExp> =>
+    bind(
+        mapResult((valueExp: CExp) => typeofExp(valueExp, tenv), exp.valueExps),
+        (valueTexps: TExp[]) => makeOk(isEmpty(valueTexps) ? makeEmptyTupleTExp() : makeNonEmptyTupleTExp(valueTexps))
+    );
 
 // Typecheck a full program
 // TODO: Thread the TEnv (as in L1)

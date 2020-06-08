@@ -41,8 +41,9 @@ import { isArray, isString, isNumericString, isIdentifier } from "../shared/type
 //         |  ( let ( <binding>* ) <cexp>+ )               / LetExp(bindings:Binding[], body:CExp[])
 //         |  ( letrec ( binding*) <cexp>+ )               / LetrecExp(bindings:Binding[], body: CExp)
 //         |  ( let-values ( <values-binding>* ) <cexp>+ ) / LetValuesExp(bindings: ValuesBinding[], body: CExp[])
+//         |  ( values <cexp>* )                           / ValuesExp(valueExps: CExp[])
 //         |  ( set! <var> <cexp>)                         / SetExp(var: varRef, val: CExp)
-// <binding>        ::= ( <var-decl> <cexp> )                   / Binding(var:VarDecl, val:Cexp)
+// <binding>        ::= ( <var-decl> <cexp> )              / Binding(var:VarDecl, val:Cexp)
 // <values-binding> ::= ( (<var-decl>*) <cexp> )           / ValuesBinding(vars: VarDecl[], tuple: CExp)
 // <prim-op>        ::= + | - | * | / | < | > | = | not |  eq? | string=?
 //                        | values | cons | car | cdr | list? | number?
@@ -69,9 +70,10 @@ export const isAtomicExp = (x: any): x is AtomicExp =>
     isNumExp(x) || isBoolExp(x) || isStrExp(x) ||
     isPrimOp(x) || isVarRef(x);
 
-export type CompoundExp = AppExp | IfExp | ProcExp | LetExp | LitExp | LetValuesExp | LetrecExp | SetExp;
+export type CompoundExp = AppExp | IfExp | ProcExp | LetExp | LitExp | LetValuesExp | LetrecExp | ValuesExp | SetExp;
 export const isCompoundExp = (x: any): x is CompoundExp =>
-    isAppExp(x) || isIfExp(x) || isProcExp(x) || isLitExp(x) || isLetExp(x) || isLetValuesExp(x) || isLetrecExp(x) || isSetExp(x);
+    isAppExp(x) || isIfExp(x) || isProcExp(x) || isLitExp(x) ||
+    isLetExp(x) || isLetValuesExp(x) || isLetrecExp(x) || isValuesExp(x) || isSetExp(x);
 export const expComponents = (e: Exp): CExp[] =>
     isIfExp(e) ? [e.test, e.then, e.alt] :
     isProcExp(e) ? e.body :
@@ -150,13 +152,18 @@ export const makeLetrecExp = (bindings: Binding[], body: CExp[]): LetrecExp =>
     ({tag: "LetrecExp", bindings: bindings, body: body});
 export const isLetrecExp = (x: any): x is LetrecExp => x.tag === "LetrecExp";
 
-export interface ValuesBinding {tag: "ValuesBinding"; vars: VarDecl[]; tuple: CExp}
+export interface ValuesBinding {tag: "ValuesBinding"; vars: VarDecl[]; tuple: CExp;}
 export const makeValuesBinding = (vars: VarDecl[], tuple: CExp): ValuesBinding => ({tag: "ValuesBinding", vars: vars, tuple: tuple});
 export const isValuesBinding = (x: any): x is ValuesBinding => x.tag === "ValuesBinding";
 
-export interface LetValuesExp {tag: "LetValuesExp"; bindings: ValuesBinding[]; body: CExp[]}
+export interface LetValuesExp {tag: "LetValuesExp"; bindings: ValuesBinding[]; body: CExp[];}
 export const makeLetValuesExp = (bindings: ValuesBinding[], body: CExp[]): LetValuesExp => ({tag: "LetValuesExp", bindings: bindings, body: body});
 export const isLetValuesExp = (x: any): x is LetValuesExp => x.tag === "LetValuesExp";
+
+export interface ValuesExp {tag: "ValuesExp", valueExps: CExp[];}
+export const makeValuesExp = (valueExps: CExp[]): ValuesExp =>
+    ({tag: "ValuesExp", valueExps: valueExps});
+export const isValuesExp = (x: any): x is ValuesExp => x.tag === "ValuesExp";
 
 export interface SetExp {tag: "SetExp"; var: VarRef; val: CExp; }
 export const makeSetExp = (v: VarRef, val: CExp): SetExp =>
@@ -383,6 +390,7 @@ export const unparse = (e: Parsed): Result<string> =>
     isLetValuesExp(e) ? unparseLetValuesExp(e) :
     isProcExp(e) ? unparseProcExp(e) :
     isLitExp(e) ? makeOk(unparseLitExp(e)) :
+    isValuesExp(e) ? makeFailure("Not yet supported") :
     isSetExp(e) ? unparseSetExp(e) :
     // DefineExp | Program
     isDefineExp(e) ? safe2((vd: string, val: string) => makeOk(`(define ${vd} ${val})`))

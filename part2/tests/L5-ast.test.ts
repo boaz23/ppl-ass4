@@ -7,6 +7,7 @@ import {
     makePrimOp, makeProcExp,
     makeStrExp,
     makeValuesBinding,
+    makeValuesExp,
     makeVarDecl,
     makeVarRef,
     parseL5Exp,
@@ -30,7 +31,12 @@ describe('L5 Parse', () => {
     let tVarGen = makeTVarGen();
 
     it('test simple - 1', () => {
-        expect(p('(values 1 "string")')).to.deep.equal(makeOk((makeAppExp(makePrimOp("values") , [makeNumExp(1),makeStrExp("string")]))));
+        expect(p('(values 1 "string")')).to.deep.equal(makeOk(
+            makeValuesExp([
+                makeNumExp(1),
+                makeStrExp("string")
+            ])
+        ));
     });
 
     it('test simple - 2', () => {
@@ -63,13 +69,11 @@ describe('L5 Parse', () => {
                makeVarDecl("f", tVarGen()),
                makeProcExp(
                    [makeVarDecl("x", tVarGen())],
-                   [makeAppExp(
-                       makePrimOp("values"), [
+                   [makeValuesExp([
                            makeNumExp(1),
                            makeNumExp(2),
                            makeNumExp(3),
-                       ]
-                   )],
+                       ])],
                    tVarGen()
                )
            )
@@ -82,8 +86,8 @@ describe('L5 Parse', () => {
      (() (values))) 5)
        `)).to.deep.eq(makeOk(
            makeLetValuesExp([
-               makeValuesBinding([], makeAppExp(makePrimOp('values'), [makeNumExp(5)])),
-               makeValuesBinding([], makeAppExp(makePrimOp('values'), [])),
+               makeValuesBinding([], makeValuesExp([makeNumExp(5)])),
+               makeValuesBinding([], makeValuesExp([])),
            ], [
                makeNumExp(5)
            ])
@@ -124,7 +128,7 @@ describe('L5 Unparse', () => {
         expect(parseUnparse(`
 (let-values ((() (values 5))
      (() (values))) 5)
-       `)).to.deep.eq(makeOk('(let-values ((() (values 5)) (() (values ))) 5)'));
+       `)).to.deep.eq(makeOk('(let-values ((() (values 5)) (() (values))) 5)'));
     });
 });
 

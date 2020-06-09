@@ -51,7 +51,7 @@ export interface SymbolSExp {
 export type SExpValue = number | boolean | string | PrimOp | Tuple | Closure | SymbolSExp | EmptySExp | CompoundSExp | void;
 export const isSExp = (x: any): x is SExpValue =>
     typeof(x) === 'string' || typeof(x) === 'boolean' || typeof(x) === 'number' ||
-    isSymbolSExp(x) || isCompoundSExp(x) || isEmptySExp(x) || isPrimOp(x) || isClosure(x);
+    isSymbolSExp(x) || isCompoundSExp(x) || isEmptySExp(x) || isPrimOp(x) || isTuple(x) || isClosure(x);
 
 export const makeCompoundSExp = (val1: SExpValue, val2: SExpValue): CompoundSExp =>
     ({tag: "CompoundSexp", val1: val1, val2 : val2});
@@ -73,8 +73,8 @@ export const compoundSExpToArray = (cs: CompoundSExp, res: string[]): string[] |
     isEmptySExp(cs.val2) ? append(valueToString(cs.val1), res) :
     isCompoundSExp(cs.val2) ? compoundSExpToArray(cs.val2, res.concat([valueToString(cs.val1)])) :
     ({ s1: res.concat([valueToString(cs.val1)]), s2: valueToString(cs.val2)})
- 
-export const compoundSExpToString = (cs: CompoundSExp, css = compoundSExpToArray(cs, [])): string => 
+
+export const compoundSExpToString = (cs: CompoundSExp, css = compoundSExpToArray(cs, [])): string =>
     isArray(css) ? `(${join(' ', css)})` :
     `(${css.s1.join(' ')} . ${css.s2})`
 
@@ -89,4 +89,4 @@ export const valueToString = (val: Value): string =>
     isSymbolSExp(val) ? val.val :
     isEmptySExp(val) ? "'()" :
     isCompoundSExp(val) ? compoundSExpToString(val) :
-    "Error: unknown value type "+val 
+    "Error: unknown value type "+val
